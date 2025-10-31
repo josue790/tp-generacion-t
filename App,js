@@ -1,0 +1,95 @@
+import React, { useState, useEffect } from "react";
+import "./App.css";
+function App() {
+  const [people, setPeople] = useState([]);
+  const [selectedUrl, setSelectedUrl] = useState("");
+  const [characterData, setCharacterData] = useState(null);
+  const [nickname, setNickname] = useState("");
+  const [favorite, setFavorite] = useState(false);
+  const [savedCard, setSavedCard] = useState(null);
+  useEffect(() => {
+    fetch("https://swapi.dev/api/people/?page=1")
+      .then((res) => res.json())
+      .then((data) => setPeople(data.results))
+      .catch((err) => console.error(err));
+  }, []);
+  useEffect(() => {
+    if (selectedUrl) {
+      fetch(selectedUrl)
+        .then((res) => res.json())
+        .then((data) => setCharacterData(data))
+        .catch((err) => console.error(err));
+    }
+  }, [selectedUrl]);
+  const handleSave = () => {
+    if (!characterData) return;
+    const ficha = {
+      personaje: characterData.name,
+      apodo: nickname,
+      favorito: favorite ? "Sí" : "No",
+      altura: characterData.height,
+      nacimiento: characterData.birth_year,
+    };
+    setSavedCard(ficha);
+  };
+  return (
+    <div className="App">
+      <h1>🌌 Ficha Galáctica 🌌</h1>
+      {/* Select de personajes */}
+      <select
+        onChange={(e) => setSelectedUrl(e.target.value)}
+        defaultValue=""
+      >
+        <option value="">-- Selecciona un personaje --</option>
+        {people.map((p, i) => (
+          <option key={i} value={p.url}>
+            {p.name}
+          </option>
+        ))}
+      </select>
+      {/* Vista previa */}
+      {characterData ? (
+        <div className="ficha">
+          <h2>{characterData.name}</h2>
+          <p><strong>Altura:</strong> {characterData.height} cm</p>
+          <p><strong>Año de nacimiento:</strong> {characterData.birth_year}</p>
+          <div>
+            <label>
+              Apodo en tu ficha:{" "}
+              <input
+                type="text"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+              />
+            </label>
+          </div>
+          <div>
+            <label>
+              <input
+                type="checkbox"
+                checked={favorite}
+                onChange={(e) => setFavorite(e.target.checked)}
+              />
+              ¿Es tu favorito?
+            </label>
+          </div>
+          <button onClick={handleSave}>Guardar ficha</button>
+        </div>
+      ) : (
+        <p className="loading">Selecciona un personaje...</p>
+      )}
+      {/* Resumen */}
+      {savedCard && (
+        <div className="ficha">
+          <h2>Resumen de tu ficha</h2>
+          <p><strong>Personaje:</strong> {savedCard.personaje}</p>
+          <p><strong>Apodo:</strong> {savedCard.apodo}</p>
+          <p><strong>Favorito:</strong> {savedCard.favorito}</p>
+          <p><strong>Altura:</strong> {savedCard.altura} cm</p>
+          <p><strong>Año de nacimiento:</strong> {savedCard.nacimiento}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+export default App;
